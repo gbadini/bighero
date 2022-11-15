@@ -457,8 +457,9 @@ class Pje(PrimeiroGrau):
                                         self.prc_id)
 
     def abre_aba_processo(self, index=1):
-        if not try_click(self.driver, '//*[@id="fPP:processosTable:tb"]/tr['+str(index)+']/td[1]/a[1]'):
-            raise MildException("Botão de abrir não localizado", self.uf, self.plataforma, self.prc_id, False)
+        if not try_click(self.driver, '//*[@id="fPP:processosTable:tb"]/tr['+str(index)+']/td[2]/a[1]'):
+            if not try_click(self.driver, '//*[@id="fPP:processosTable:tb"]/tr[' + str(index) + ']/td[1]/a[1]'):
+                raise MildException("Botão de abrir não localizado", self.uf, self.plataforma, self.prc_id, False)
 
         aguarda_alerta(self.driver)
 
@@ -1204,7 +1205,7 @@ class Pje(PrimeiroGrau):
             return
         if self.driver.find_element_by_class_name('alert-danger'):
             if self.driver.find_element_by_xpath('//*[@id="pageBody"]/div').text.find('Unhandled') > -1:
-                raise CriticalException("Erro ao buscar processo (Unhandled Exception)", self.uf, self.plataforma, self.prc_id)
+                raise MildException("Erro ao buscar processo (Unhandled Exception)", self.uf, self.plataforma, self.prc_id)
 
         if self.driver.find_element_by_xpath('//*[@id="divTimeLine:divEventosTimeLine"]/div[3]'):
             self.div = 'divEventosTimeLine'

@@ -188,11 +188,12 @@ class DF(Pje):
         '''
         :param str numero_busca: processo a ser comparado
         '''
+        numero_site = ''
         aguarda_presenca_elemento(self.driver,'//*[@id="fPP:processosTable:tb"]/tr/td[1]')
-        el = self.driver.find_element_by_xpath('//*[@id="fPP:processosTable:tb"]/tr/td[1]')
+        el = self.driver.find_element_by_xpath('//*[@id="fPP:processosTable:tb"]/tr/td[2]')
         if el:
             numero_site = ajusta_numero(el.text)
             if numero_busca == numero_site:
                 return True
 
-        raise MildException("Número CNJ Diferente", self.uf, self.plataforma, self.prc_id)
+        raise MildException("Número CNJ Diferente - "+numero_busca + ' - ' + numero_site, self.uf, self.plataforma, self.prc_id)
