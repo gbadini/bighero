@@ -3,7 +3,7 @@ import random
 import logging
 from Config.customMethods import SQLiteHandler
 from Config.customMethods import SystemLogFilter
-import requests
+import requests, time
 from configparser import ConfigParser
 from pathlib import Path
 
@@ -18,6 +18,12 @@ def create_logger(log_usuario,log_login,log_sistema,log_uf,log_escritorio,log_pr
         log_ip = config.get('form', 'ip')
     else:
         log_ip = requests.get('https://api.ipify.org/').text
+        if log_ip.find('erros') > -1:
+            time.sleep(1)
+            log_ip = requests.get('https://api.ipify.org/').text
+            if len(log_ip) > 20:
+                log_ip = '201.47.170.196'
+
 
     print(log_ip)
     logger = logging.getLogger(__name__)
