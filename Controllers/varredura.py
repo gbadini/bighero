@@ -112,8 +112,8 @@ class Varredura():
 
         # try:
         if len(rows) > 0:
-            Session = connect_db('log', '201.47.170.196,1535')
-            # Session = connect_db('log', '186.195.37.158,1535')
+            # Session = connect_db('log', '201.47.170.196,1535')
+            Session = connect_db('log', '186.195.37.158,1535')
             Log.insert(Session(), rows)
             Log.clear(sqlite_conn)
 
@@ -206,7 +206,8 @@ class Varredura():
                         token = plt[0]['plt_token']
 
                     login_plt = login if login is not None else 'Certificado'
-                    self.logger = create_logger(usuario, login_plt, self.nome_plataforma, self.uf, c)
+                    if self.logger is None:
+                        self.logger = create_logger(usuario, login_plt, self.nome_plataforma, self.uf, c)
 
                     if self.driver is None or self.reiniciar_navegador or self.primeiro_ciclo:
                         self.driver = create_browser_instance(self.pasta_download, headless, self.wait_loading, browser=self.browser)

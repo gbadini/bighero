@@ -50,6 +50,7 @@ class PrimeiroGrau(Varredura):
         # ENQUANTO A QUERY RETORNAR PROCESSOS, A VARREDURA CONTINUA
         procs = [1]
         ignorar_id = []
+        casos_com_erro = {}
         while len(procs) > 0:
             query_and = self.query_and
 
@@ -234,14 +235,24 @@ class PrimeiroGrau(Varredura):
                 except MildException:
                     tb = traceback.format_exc()
                     # print(tb)
+
+                    if self.prc_id in casos_com_erro:
+                        casos_com_erro[self.prc_id] += 1
+                        if casos_com_erro[self.prc_id] >= 5:
+                            ignorar_id.append(str(proc['prc_id']))
+                            continue
+                    else:
+                        casos_com_erro[self.prc_id] = 1
+
                     self.logger.warning(tb, extra={'log_prc_id': self.prc_id})
-                    if tb.find('CNJ') > -1:
+                    if tb.find('CNJ') > -1 or tb.find('Unhandled Exception'):
                         count_error += 1
                     else:
                         count_error = 0
 
                     if count_error == 5:
                         return False
+
                     continue
 
                 except CriticalException:
