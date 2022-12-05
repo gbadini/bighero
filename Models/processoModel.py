@@ -56,6 +56,7 @@ class ProcessoTable(Base):
     prc_data_pje = Column(DATETIME)
     prc_pje = Column(BOOLEAN)
     prc_data_projudi = Column(DATETIME)
+    prc_pasta = Column(VARCHAR(20))
     prc_projudi = Column(BOOLEAN)
     prc_data_eproc = Column(DATETIME)
     prc_eproc = Column(BOOLEAN)
@@ -99,6 +100,7 @@ class ProcessoTable(Base):
     prc_localizacao = Column(VARCHAR(150))
     prc_pessoa = Column(INTEGER)
     prc_trf = Column(INTEGER)
+    prc_data_trf = Column(DATETIME)
 
 class Processo():
 
@@ -209,12 +211,11 @@ class Processo():
         :param int quantidade: quantidade de processos a serem retornados
         '''
         if area == 1:
-            if uf.upper().find('TRF') > -1:
-                query = Processo.format_query_federal(uf, plataforma, area, data_referencia, query_and, grau, quantidade, somente_download_pendente, arquivo_morto, intervalo=intervalo)
-            else:
-                query = Processo.format_query(uf, plataforma, area, data_referencia, query_and, grau, quantidade, somente_download_pendente, arquivo_morto, intervalo=intervalo)
-        else:
+            query = Processo.format_query(uf, plataforma, area, data_referencia, query_and, grau, quantidade, somente_download_pendente, arquivo_morto, intervalo=intervalo)
+        elif area == 2:
             query = Processo.format_query_trabalhista(uf, plataforma, area, data_referencia, query_and, grau, quantidade, somente_download_pendente, arquivo_morto, intervalo=intervalo)
+        else:
+            query = Processo.format_query_federal(uf, plataforma, area, data_referencia, query_and, grau, quantidade, somente_download_pendente, arquivo_morto, intervalo=intervalo)
 
         result = base.execute(query)
         result_dict = result.fetchdict()
@@ -307,23 +308,20 @@ class Processo():
         estados = trf_estado(uf)
         ufs = "','".join(estados)
 
-        plt = nome_plataforma(plataforma)
-        campo_data = 'prc_data_' + plt
-        campo_plt = 'prc_' + plt
         situacao = "'Removido da Base','Arquivo Morto','Morto','Encerrado'"
         if arquivo_morto:
             situacao = "'Removido da Base','Morto','Encerrado'"
 
         if grau == 1:
-            campos = "top " + str(quantidade) + " prc_sequencial, prc_numero, prc_id, prc_estado, prc_status, cadastro, prc_grau, prc_autor, prc_migrado, prc_codigo," + campo_data + "," + campo_plt + ", CASE WHEN " + campo_data + " is null THEN 0 ELSE 1 END AS OrderBy"
+            campos = "top " + str(quantidade) + " prc_sequencial, prc_numero, prc_id, prc_estado, prc_status, prc_cpf_cnpj, prc_cnpj_promovido, prc_carteira, prc_situacao, prc_pai, prc_valor_causa, prc_cpf_cnpj, cadastro, prc_grau, prc_autor, prc_migrado, prc_codigo, prc_data_trf, prc_trf, CASE WHEN prc_data_trf is null THEN 0 ELSE 1 END AS OrderBy"
             order_by = " order by OrderBy, newid()"
         else:
-            campos = "top " + str(quantidade) + " prc_id,rec_id,prc_numero,prc_autor,prc_numero_2g,prc_data_2g,rec_numero,rec_status,cadastro,rec_codigo,rec_data_update"
+            campos = "top " + str(quantidade) + " prc_id,rec_id,prc_numero,prc_autor,prc_numero_2g,prc_data_2g,rec_numero,rec_status,prc_cpf_cnpj,cadastro,rec_codigo,rec_data_update"
             order_by = " order by newid()"
 
         if not random:
             if grau == 1:
-                campos = "prc_sequencial, prc_numero,prc_id,prc_estado,prc_status,cadastro,prc_grau,prc_codigo, prc_autor, prc_migrado, " + campo_data + "," + campo_plt + ", CASE WHEN " + campo_data + " is null THEN 0 ELSE 1 END AS OrderBy"
+                campos = "prc_sequencial, prc_numero,prc_id,prc_estado,prc_status,prc_cpf_cnpj, prc_cnpj_promovido, prc_carteira, prc_situacao, prc_pai, prc_valor_causa, cadastro,prc_grau,prc_codigo, prc_autor, prc_migrado, prc_data_trf, prc_trf, CASE WHEN prc_data_trf is null THEN 0 ELSE 1 END AS OrderBy"
             else:
                 campos = "prc_id,rec_id,prc_numero,prc_numero_2g,prc_data_2g,prc_autor,rec_numero,rec_status,cadastro,rec_codigo,rec_data_update"
             order_by = " order by prc_id"
@@ -342,9 +340,9 @@ class Processo():
                     "left join (select acp_processo,max(acp_cadastro) as cadastro from acompanhamento WITH (NOLOCK) where " \
                     "acp_plataforma=" + str(plataforma) + " and acp_grau = 1 group by acp_processo) acp on acp_processo=prc_id " \
                     "" + join + "" \
-                    "where prc_estado in ('"+ufs+"') and (" + campo_data + "<='" + data_referencia + "' or " + campo_data + " is null) and len(prc_numero)>12 and len(prc_numero)<30 and prc_numero not like '%MIGRADO%' " \
+                    "where prc_estado in ('"+ufs+"') and len(prc_numero)>12 and len(prc_numero)<30 and prc_numero not like '%MIGRADO%' " \
                     "and (prc_situacao <> 'Removido da Base' or prc_situacao is NULL) and (prc_status not in ('Removido da Base','Trabalhista') or prc_status is null) " \
-                    "and (prc_procon = 0 or prc_procon is null) and ((prc_numero2 is NULL and (prc_trf is NULL or prc_trf=1)) or prc_trf=" + str(plataforma) + ") " \
+                    "and (prc_procon = 0 or prc_procon is null) and ((prc_numero2 is NULL and (prc_trf is NULL or (prc_trf<0 and prc_trf<>-" + str(plataforma) + "))) or (prc_trf=" + str(plataforma) + " and (prc_data_trf <= '" + data_referencia + "' or prc_data_trf is NULL))) " \
                     "and (prc_situacao is null or prc_situacao not in (" + situacao + ")) " \
                     "and (prc_modulo <> 'PROCON' or prc_modulo is null) and prc_numero not like '%DF%' and prc_numero not like '%CTAT%' " \
                     " " + query_and + " "+order_by
@@ -457,19 +455,30 @@ class Processo():
 
     # ATUALIZA DADOS DOS PROCESSOS
     @staticmethod
-    def update(base, prc_id, plt_id, localizado, dados, grau=1, cliente=False):
+    def update(base, prc_id, plt_id, localizado, dados, grau=1, cliente=False, area=1):
         '''
         :param int prc_id: id do processo
         :param int plt_id: id do plataforma
         :param bool localizado: o processo foi localizado na varredura?
         :param dict dados: dados do processo
         '''
+        if area == 3:
+            if localizado:
+                dados['prc_trf'] = plt_id
+                dados['prc_data_trf'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            else:
+                if dados['prc_trf'] is None:
+                    dados['prc_trf'] = plt_id*-1
+                else:
+                    dados['prc_trf'] = 0
+
         if grau == 2:
             if not localizado:
                 dados['prc_numero_2g'] = '0'
             else:
-                plt = nome_plataforma(plt_id)
-                dados['prc_' + plt] = True
+                if area != 3:
+                    plt = nome_plataforma(plt_id)
+                    dados['prc_' + plt] = True
 
             dados['prc_data_2g'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
@@ -477,14 +486,16 @@ class Processo():
             if cliente:
                 dados['prc_data_update1'] = datetime.now()
             else:
-                if localizado:
-                    for p in plataformas:
-                        plt = nome_plataforma(p)
-                        dados['prc_' + plt] = False
-                plt = nome_plataforma(plt_id)
-                # dados['prc_id'] = prc_id
-                dados['prc_' + plt] = localizado
-                dados['prc_data_' + plt] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                if area != 3:
+                    if localizado:
+                        for p in plataformas:
+                            plt = nome_plataforma(p)
+                            dados['prc_' + plt] = False
+                    plt = nome_plataforma(plt_id)
+                    # dados['prc_id'] = prc_id
+                    dados['prc_' + plt] = localizado
+                    dados['prc_data_' + plt] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
                 dados['prc_data_update'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                 if 'prc_segredo' not in dados and localizado:
                     dados['prc_segredo'] = False
@@ -546,7 +557,7 @@ class Processo():
 
     # VERIFICA SE O PROCESSO JÁ FOI VARRIDO
     @staticmethod
-    def ultimo_update(base, prc_id, plataforma, data_atual, grau=1, cliente=False):
+    def ultimo_update(base, prc_id, plataforma, data_atual, grau=1, cliente=False, area=1):
         if cliente:
             campo_data = 'prc_data_update1'
             campo_busca = getattr(ProcessoTable, campo_data)
@@ -554,7 +565,15 @@ class Processo():
             result = base.execute(s)
             result = result.fetchdict()
         else:
-            if grau == 1:
+            if area == 3:
+                campo_data = 'prc_data_trf'
+                campo_busca = getattr(ProcessoTable, 'prc_data_trf')
+
+                s = select([campo_busca]).where(column("prc_id") == prc_id).where(column("prc_trf") == plataforma)
+                result = base.execute(s)
+                result = result.fetchdict()
+
+            elif grau == 1:
                 plt = nome_plataforma(plataforma)
                 campo_data = 'prc_data_' + plt
                 campo_busca = getattr(ProcessoTable, 'prc_data_'+plt)
@@ -614,10 +633,12 @@ class Processo():
         if uf == '*':
             query = Processo.format_query_cliente(plataforma, data_referencia, query_and, quantidade, arquivo_morto, random=False, tipo=tipo, base=base)
         else:
-            if area == 1 or area == 3:
+            if area == 1:
                 query = Processo.format_query(uf, plataforma, area, data_referencia, query_and, grau, quantidade, somente_download_pendente, arquivo_morto, random=False)
-            else:
+            elif area == 2:
                 query = Processo.format_query_trabalhista(uf, plataforma, area, data_referencia, query_and, grau, quantidade, somente_download_pendente, arquivo_morto, random=False)
+            else:
+                query = Processo.format_query_federal(uf, plataforma, area, data_referencia, query_and, grau, quantidade, somente_download_pendente, arquivo_morto, random=False)
 
         ids = []
         for i in range(0, threads):
@@ -823,7 +844,7 @@ class Processo():
         if plataforma == 11:
             carteira = '5'
 
-        campos = "top "+str(quantidade)+" prc_id, prc_sequencial, prc_numero, prc_numero_processum, prc_autor, prc_carteira, prc_situacao, prc_estado, prc_area, pagamento.*"
+        campos = "top "+str(quantidade)+" prc_id, prc_sequencial, prc_pasta, prc_numero, prc_numero_processum, prc_autor, prc_carteira, prc_situacao, prc_estado, prc_area, pagamento.*"
         # order_by = " order by prc_id "
         order_by = " order by newid()"
         if count:
@@ -831,7 +852,7 @@ class Processo():
             order_by = ""
 
         if not random:
-            campos = "prc_id, prc_sequencial, prc_numero, prc_numero_processum, prc_autor, prc_carteira, prc_situacao, prc_estado, prc_area, pagamento.*"
+            campos = "prc_id, prc_sequencial, prc_pasta, prc_numero, prc_numero_processum, prc_autor, prc_carteira, prc_situacao, prc_estado, prc_area, pagamento.*"
             order_by = " order by prc_id"
 
         if query_and.strip() != '':
@@ -1010,14 +1031,14 @@ class Processo():
     # QUERY PARA DETECTAR CASOS QUE PRECISAM SER VARRIDOS
     @staticmethod
     def query_cliente_varredura(plataforma, data_referencia='', query_and='', quantidade=80, arquivo_morto=False, count=False, intervalo=[], random=True):
-        campos = "top "+str(quantidade)+" prc_id,prc_sequencial, prc_comarca, prc_data_update1, prc_autor, prc_promovido, prc_cpf_cnpj, prc_numero,prc_numero_processum,prc_area,prc_estado,prc_vinculo,prc_conta,prc_produto,prc_status,cadastro,prc_codigo,prc_data_update, prc_carteira, prc_situacao, prc_data, CASE WHEN prc_data_update1 is null THEN 0 ELSE 1 END AS OrderBy, CASE WHEN ctg_valor_possivel = 0 THEN 0 ELSE 1 END AS OrderByCtg"
+        campos = "top "+str(quantidade)+" prc_id,prc_sequencial, prc_pasta, prc_comarca, prc_data_update1, prc_autor, prc_promovido, prc_cpf_cnpj, prc_numero,prc_numero_processum,prc_area,prc_estado,prc_vinculo,prc_conta,prc_produto,prc_status,cadastro,prc_codigo,prc_data_update, prc_carteira, prc_situacao, prc_data, CASE WHEN prc_data_update1 is null THEN 0 ELSE 1 END AS OrderBy, CASE WHEN ctg_valor_possivel = 0 THEN 0 ELSE 1 END AS OrderByCtg"
         order_by = " order by OrderBy, OrderByCtg, newid()"
         if count:
             campos = "count(*) as total"
             order_by = ""
 
         if not random:
-            campos = "prc_id, prc_sequencial, prc_comarca, prc_data_update1, prc_autor, prc_promovido, prc_cpf_cnpj, prc_numero,prc_numero_processum,prc_area,prc_estado,prc_status,cadastro,prc_vinculo,prc_conta,prc_produto,prc_codigo,prc_data_update, prc_carteira, prc_situacao, prc_data, CASE WHEN prc_data_update1 is null THEN 0 ELSE 1 END AS OrderBy, CASE WHEN ctg_valor_possivel = 0 THEN 0 ELSE 1 END AS OrderByCtg"
+            campos = "prc_id, prc_sequencial, prc_pasta, prc_comarca, prc_data_update1, prc_autor, prc_promovido, prc_cpf_cnpj, prc_numero,prc_numero_processum,prc_area,prc_estado,prc_status,cadastro,prc_vinculo,prc_conta,prc_produto,prc_codigo,prc_data_update, prc_carteira, prc_situacao, prc_data, CASE WHEN prc_data_update1 is null THEN 0 ELSE 1 END AS OrderBy, CASE WHEN ctg_valor_possivel = 0 THEN 0 ELSE 1 END AS OrderByCtg"
             order_by = " order by prc_id"
 
         hoje = datetime.now()

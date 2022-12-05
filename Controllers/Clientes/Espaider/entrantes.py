@@ -72,8 +72,16 @@ class Entrantes(EntrantesCliente, Espaider):
         self.driver.switch_to_frame(iframe)
         datas = self.formata_datas(10, 7)
 
-        self.driver.find_element_by_id('cbModeloFiltroEdt').send_keys('15 - Processos por andamentos')
-        self.driver.find_element_by_id('cbModeloFiltroEdt').send_keys(Keys.RETURN)
+        campo_pesquisa = self.driver.find_element_by_id('cbModeloFiltroEdt').get_attribute('value')
+        if campo_pesquisa != '15 - Processos por andamentos':
+            self.driver.find_element_by_id('cbModeloFiltroEdt').clear()
+            while self.driver.find_element_by_id('cbModeloFiltroEdt').get_attribute('value') != '':
+                self.driver.find_element_by_id("cbModeloFiltroEdt").send_keys(Keys.END)
+                self.driver.find_element_by_id("cbModeloFiltroEdt").send_keys(Keys.BACKSPACE)
+            self.driver.find_element_by_id('cbModeloFiltroEdt').send_keys('15 - Processos por andamentos')
+            self.driver.find_element_by_id('cbModeloFiltroEdt').send_keys(Keys.RETURN)
+
+        aguarda_presenca_elemento(self.driver, 'ProcessoEventos_DataEvento_startDateEdt', tipo='ID')
         self.driver.find_element_by_id('ProcessoEventos_DataEvento_startDateEdt').send_keys(datas[0])
         self.driver.find_element_by_id('ProcessoEventos_DataEvento_endDateEdt').send_keys(datas[1])
         self.driver.find_element_by_xpath('//*[@id="Ok"]/em/button').click()
@@ -127,12 +135,13 @@ class Entrantes(EntrantesCliente, Espaider):
                 prc_situacao = tr.find_element_by_xpath('td[' + str(colunas['Situacao']) + ']').text
                 prc_comarca = tr.find_element_by_xpath('td[' + str(colunas['Comarca']) + ']').text
                 prc_data = tr.find_element_by_xpath('td[' + str(colunas['Criado em']) + ']').text
+                prc_pasta = tr.find_element_by_xpath('td[' + str(colunas['Pasta']) + ']').text
                 prc_data = datetime.strptime(prc_data, '%d/%m/%Y %H:%M')
 
                 prc = {'prc_sequencial': 'SEM CONTRATO', 'prc_numero': prc_numero, 'prc_autor': prc_autor,
                        'prc_numero_processum': prc_numero, 'prc_carteira': 5, 'prc_estado': 'BA',
                        'prc_comarca': prc_comarca, 'prc_objeto1': prc_objeto1, 'prc_data_cadastro': prc_data,
-                       'prc_data': prc_data, 'prc_modulo': prc_modulo, 'prc_situacao': prc_situacao, 'prc_area': 1}
+                       'prc_data': prc_data, 'prc_modulo': prc_modulo, 'prc_situacao': prc_situacao, 'prc_area': 1, 'prc_pasta': prc_pasta}
 
                 dados_site.append(prc)
 
