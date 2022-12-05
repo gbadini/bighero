@@ -62,7 +62,8 @@ class OcorrenciasDJ(OcorrenciasDJCliente, Processum):
                 'data_evento': {'dado': acp_evento, 'campo': 'fCadastrar:dataEvento', 'by': 'ID'},
                 'obs': {'dado': obs_final, 'campo': 'fCadastrar:observacao', 'by': 'ID'},
             },
-            'select': {}
+            'select': {},
+            'alternativo': {'tipo': 'Publicação', },
         }
         # dados_lanc.append(acp)
         # print(acp)
