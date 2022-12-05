@@ -145,9 +145,14 @@ class MainApplication(tk.Frame):
                             modulo = getattr(importlib.import_module('Controllers.Clientes.' + plataforma + '.' + file), tipo_mod)
                         else:
                             uf_mod = uf if self.tasklist[t]['grau'] == 1 else uf + '2g'
-                            plat_mod = 'Trf' if uf_mod.upper().find('TRF') > -1 else plataforma.capitalize()
-                            print('Controllers.Tribunais.' + plat_mod + '.' + uf_mod)
-                            modulo = getattr(importlib.import_module('Controllers.Tribunais.' + plat_mod + '.' + uf_mod), uf_mod)
+                            plat_mod = plataforma.capitalize()
+                            # plat_mod = 'Trf' if uf_mod.upper().find('TRF') > -1 else plataforma.capitalize()
+                            if uf_mod.upper().find('TRF') > -1:
+                                print('Controllers.Tribunais.Trf.' + uf_mod.upper() + '.' + plat_mod)
+                                modulo = getattr(importlib.import_module('Controllers.Tribunais.Trf.' + uf_mod.upper() + '.' + plat_mod), plat_mod+'_'+uf_mod)
+                            else:
+                                print('Controllers.Tribunais.' + plat_mod + '.' + uf_mod)
+                                modulo = getattr(importlib.import_module('Controllers.Tribunais.' + plat_mod + '.' + uf_mod), uf_mod)
 
                     except:
                         print(traceback.format_exc())
@@ -189,7 +194,7 @@ class MainApplication(tk.Frame):
                                     nome_tipo = new_tasks[id_proc]['tipo'].replace(' ','')
                                 else:
                                     nome_tipo = new_tasks[id_proc]['tipo']
-                                new_tasks[id_proc]['task'] = mp.Process(target=wd.ciclo, args=(data_varredura, nome_tipo, new_tasks[id_proc]['and'], b, new_tasks[id_proc]['categoria'], new_tasks[id_proc]['headless'], new_tasks[id_proc]['arquivo_morto'], [id_inicial, id_final], new_tasks[id_proc]['grau'], self.usuario, new_tasks[id_proc]['area']))
+                                new_tasks[id_proc]['task'] = mp.Process(target=wd.ciclo, args=(data_varredura, nome_tipo, new_tasks[id_proc]['and'], b, new_tasks[id_proc]['categoria'], new_tasks[id_proc]['headless'], new_tasks[id_proc]['arquivo_morto'], [id_inicial, id_final], new_tasks[id_proc]['grau'], self.usuario, new_tasks[id_proc]['area'], new_tasks[id_proc]['vespertino']))
                                 tv_grau = new_tasks[id_proc]['grau'] if new_tasks[id_proc]['grau'] is not None else '-'
 
                                 if uf not in self.folders:
@@ -282,12 +287,14 @@ class MainApplication(tk.Frame):
         self.headless = BooleanVar()
         self.arquivo_morto = BooleanVar()
         self.detectar_data = BooleanVar()
+        self.varredura_vespertina = BooleanVar()
         self.detectar_data.set(True)
         fileMenu = Menu(menubar, tearoff=0)
         fileMenu.add_checkbutton(label="Utilizar a Hora Atual", variable=self.horaatual)
         fileMenu.add_checkbutton(label="Varrer em modo headless", variable=self.headless)
         fileMenu.add_checkbutton(label="Varrer Arquivo Morto", variable=self.arquivo_morto)
         fileMenu.add_checkbutton(label="Detectar Data Automaticamente", variable=self.detectar_data, )
+        fileMenu.add_checkbutton(label="Varredura Vespertina", variable=self.varredura_vespertina, )
         menubar.add_cascade(label="Opções", menu=fileMenu)
         menubar.add_command(label="Sair", command=self.close)
 
@@ -591,11 +598,15 @@ class MainApplication(tk.Frame):
         else:
             self.treeview.item(self.folders["*"], values=("", "", "", "", "", "Analisando", ""))
 
-        unicos = ('SPIC', 'Entrantes', 'Entrantes Ocorrencia', 'Ocorrencias TJ', 'Atas', 'Pagamentos')
+        if plataforma == 'Espaider':
+            unicos = ('SPIC', 'Entrantes', 'Entrantes Ocorrencia', 'Ocorrencias TJ', 'Atas',)
+        else:
+            unicos = ('SPIC', 'Entrantes', 'Entrantes Ocorrencia', 'Ocorrencias TJ', 'Atas', 'Pagamentos')
+
         iid = str(uuid.uuid1())
         self.new_tasklist[iid] = {'UF': '*', 'task': False, 'base': base, 'plataforma': plataforma, 'grau': None,
                                   'dia': dia, 'tipo': tipo, 'and': query_and, 'headless': hl,
-                                  'hora_atual': None, 'arquivo_morto': arquivo_morto, 'categoria': 2, 'area': '*', 'unico':tipo in unicos}
+                                  'hora_atual': None, 'arquivo_morto': arquivo_morto, 'categoria': 2, 'area': '*', 'unico':tipo in unicos, 'vespertino':False}
         self.treeview.insert(parent=self.folders['*'], index='end', text='*', iid=iid, values=(plataforma, base, 0, None, tipo, "Aguardando", iid))
 
     # FUNÇÃO DO BOTÃO PARA INICIAR A VARREDURA
@@ -612,14 +623,17 @@ class MainApplication(tk.Frame):
         cat = self.cat_varredura.get()
         tipo = self.tipoVarredura.get()
         area = self.area.get()
+        vespertino = self.varredura_vespertina.get()
+        if vespertino:
+            hora_atual = True
 
         if dia == '':
             dia = None
 
-        self.criar_varredura(area, uf, plataforma, grau, base, hl, hora_atual, arquivo_morto, dia, query_and, cat, tipo, varrer_todos)
+        self.criar_varredura(area, uf, plataforma, grau, base, hl, hora_atual, arquivo_morto, dia, query_and, cat, tipo, varrer_todos, vespertino=vespertino)
 
     # FUNÇÃO DO BOTÃO PARA INICIAR A VARREDURA
-    def criar_varredura(self, area, uf, plataforma, grau, base, hl, hora_atual, arquivo_morto, dia, query_and, cat, tipo, varrer_todos=False, unico=False):
+    def criar_varredura(self, area, uf, plataforma, grau, base, hl, hora_atual, arquivo_morto, dia, query_and, cat, tipo, varrer_todos=False, unico=False, vespertino=False):
         tipos = {'Baixar e Varrer': 3, 'Baixar': 1, 'Varrer': 2}
         graus = {'1º Grau': 1, '2º Grau': 2, 'Ambos': 0}
         cats = {'Sem Movs': 3, 'Completa': 2, 'Parcial': 1}
@@ -638,7 +652,7 @@ class MainApplication(tk.Frame):
             # area = self.area.get()
             if area == 1:
                 procs = {
-                    'PJE': ('BA','CE','DF','ES','MA','MG','MT','PA','PB','PE','PI','RN','RO','RJ'),
+                         'PJE': ('AP','BA','CE','ES','MA','MG','MT','PA','PB','PE','PI','RN','RO','RJ'),
                          'Eproc': ('SC', ),
                          'Tucujuris': ('AP',),
                          'Projudi': ('RR', 'PR', 'AM', 'PA', 'MA', 'PI', 'MG', 'ES','GO'),
@@ -686,7 +700,7 @@ class MainApplication(tk.Frame):
 
                     self.new_tasklist[iid] = {'UF': uf, 'task': False, 'base': base, 'plataforma': plat, 'grau': i,
                                           'dia':dia, 'tipo': tipos[tipo], 'and': query_and, 'headless':hl, 'area': area,
-                                          'hora_atual': hora_atual, 'arquivo_morto':arquivo_morto, 'categoria': cats[cat], 'unico': unico}
+                                          'hora_atual': hora_atual, 'arquivo_morto':arquivo_morto, 'categoria': cats[cat], 'unico': unico, 'vespertino': vespertino}
                     self.treeview.insert(parent=self.folders[uf], index='end', text=uf, iid=iid, values=(plat, base, 0, i, tipos[tipo], "Aguardando", iid))
 
     # FUNÇÃO DO BOTÃO PARA ENCERRAR VARREDURA DO PROCESSO SELECIONADO
@@ -916,6 +930,9 @@ class MainApplication(tk.Frame):
             self.criar_varredura_cliente('Espaider', 'ede', False, False, None, '', 'Entrantes Ocorrencia')
 
     def get_schedules(self):
+        if 'EncerrarTudo' in self.agenda_config:
+            schedule.every().day.at("17:58").do(self.btn_encerrar_tudo)
+
         if 'BAede' in self.agenda_config:
             schedule.every().day.at("18:00").do(self.agendamentos, 'BAede')
 
