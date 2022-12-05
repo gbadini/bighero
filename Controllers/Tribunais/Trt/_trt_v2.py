@@ -19,7 +19,7 @@ class TrtV2(Trt):
         aguarda_presenca_elemento(self.driver, 'timeline', tipo='ID')
         self.driver.find_element_by_id('timeline').click()
 
-        self.wait(60)
+        self.wait(90)
 
     # CONFERE SE A ÚLTIMA MOVIMENTAÇÃO DA PLATAFORMA É SUPERIOR A ULTIMA MOVIMENTAÇÃO DA BASE
     def ultima_movimentacao(self,ultima_data, prc_id, base):
@@ -446,8 +446,7 @@ class TrtV2(Trt):
                     if snack:
                         if self.driver.find_element_by_tag_name('snack-bar-container').text.find('Usuário não tem visibilidade') > -1:
                             arq['pra_sigilo'] = True
-                            self.driver.find_element_by_tag_name('snack-bar-container').find_element_by_xpath(
-                                'div/div/simple-snack-bar/div/button').click()
+                        self.driver.find_element_by_tag_name('snack-bar-container').find_element_by_xpath('div/div/simple-snack-bar/div/button').click()
 
                     if not arq['pra_sigilo']:
                         click = False
@@ -456,11 +455,18 @@ class TrtV2(Trt):
 
                         # header.find_element_by_xpath('div[2]/div[4]/a[2]/button').click()
                         aguarda_presenca_elemento(self.driver, 'snack-bar-container', tipo='TAG_NAME', tempo=0.5)
-                        snack = self.driver.find_element_by_tag_name('snack-bar-container')
-                        if snack:
-                            if self.driver.find_element_by_tag_name('snack-bar-container').text.find('não encontrado') > -1:
-                                arq['pra_erro'] = True
-                                self.driver.find_element_by_tag_name('snack-bar-container').find_element_by_xpath('div/div/simple-snack-bar/div/button').click()
+                        while True:
+                            try:
+                                snack = self.driver.find_element_by_tag_name('snack-bar-container')
+                                if snack:
+                                    if self.driver.find_element_by_tag_name('snack-bar-container').text.find('não encontrado') > -1:
+                                        arq['pra_erro'] = True
+                                        self.driver.find_element_by_tag_name('snack-bar-container').find_element_by_xpath('div/div/simple-snack-bar/div/button').click()
+                                        break
+                                else:
+                                    break
+                            except:
+                                pass
 
                         if not arq['pra_erro']:
                             arq['pra_erro'] = False if aguarda_download(self.pasta_download, 1) else True
