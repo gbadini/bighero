@@ -1,7 +1,7 @@
-from Controllers.Tribunais.Trt._trt2g import *
+from Controllers.Tribunais.Trt._trt2g_v2 import *
 
 # CLASSE DA VARREDURA DO PJE DO TRT. HERDA OS METODOS DA CLASSE TRT
-class TRT092g(Trt2g):
+class TRT092g(Trt2g_v2):
     def __init__(self):
         super().__init__()
         self.pagina_inicial = "https://pje.trt9.jus.br/segundograu/login.seam"

@@ -1,7 +1,7 @@
-from Controllers.Tribunais.Trt._trt import *
+from Controllers.Tribunais.Trt._trt_v2 import *
 
 # CLASSE DA VARREDURA DO PJE DO DF. HERDA OS METODOS DA CLASSE PJE
-class TRT09(Trt):
+class TRT09(TrtV2):
 
     def __init__(self):
         super().__init__()
