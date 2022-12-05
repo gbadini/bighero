@@ -44,7 +44,8 @@ class Pje(PrimeiroGrau):
                 sso_frame = True
                 break
 
-        self.remove_erro_pje()
+        if not self.remove_erro_pje():
+            return False
 
         id_btn = 'loginAplicacaoButton'
         if sso_frame:
@@ -88,12 +89,10 @@ class Pje(PrimeiroGrau):
                     btn.click()
                 else:
                     continue
+            except UnexpectedAlertPresentException:
+                return False
             except:
-            # except StaleElementReferenceException:
-                # self.driver.refresh()
-                # self.driver.find_element_by_id('loginAplicacaoButton').click()
                 continue
-
 
         if not aguarda_presenca_elemento(self.driver, '/html/body/nav'):
             return False
@@ -124,6 +123,14 @@ class Pje(PrimeiroGrau):
         except Exception as e:
             pass
 
+        try:
+            self.driver.switch_to.alert.accept()
+            return False
+        except:
+            pass
+
+        return True
+
     # CONFIRMA DIALOG DO PJEOFFICE
     def confirma_pje_office(self):
         time.sleep(1)
@@ -138,11 +145,23 @@ class Pje(PrimeiroGrau):
             # if not load_cert:
             #     self.driver.find_element_by_id('loginAplicacaoButton').click()
 
+            if aguarda_alerta(self.driver, tempo=0.2, aceitar=True):
+                raise Exception('PJE Office não localizado (msg via alert)')
+
             try:
-                if self.driver.find_element_by_xpath('/html/body/nav'):
+                self.driver.switch_to.default_content()
+                divs = self.driver.find_elements_by_xpath('/html/body/nav')
+                if len(divs) > 0:
                     return True
             except:
                 return False
+
+            # try:
+            #     if self.driver.find_element_by_xpath('/html/body/nav'):
+            #         return True
+            # except:
+            #     return False
+
 
             # AUTORIZAÇÃO DO CERTIFICADO
             try:
@@ -306,7 +325,6 @@ class Pje(PrimeiroGrau):
             # except Exception as e:
             #     # print(e)
             #     pass
-
 
 
     def bring_to_front(self, hwndMain):
@@ -946,7 +964,7 @@ class Pje(PrimeiroGrau):
             prc['prc_serventia'] = prc['prc_comarca2']
 
         if 'prc_comarca2' in prc:
-            prc['prc_comarca2'] = localiza_comarca(prc['prc_comarca2'], self.uf)
+            prc['prc_comarca2'] = localiza_comarca(prc['prc_comarca2'], self.proc_data['prc_estado'])
 
         if 'prc_segredo' in prc:
             prc['prc_segredo'] = True if prc['prc_segredo'] == 'SIM' else False
@@ -1207,12 +1225,19 @@ class Pje(PrimeiroGrau):
             if self.driver.find_element_by_xpath('//*[@id="pageBody"]/div').text.find('Unhandled') > -1:
                 raise MildException("Erro ao buscar processo (Unhandled Exception)", self.uf, self.plataforma, self.prc_id)
 
-        if self.driver.find_element_by_xpath('//*[@id="divTimeLine:divEventosTimeLine"]/div[3]'):
-            self.div = 'divEventosTimeLine'
-        elif self.driver.find_element_by_xpath('//*[@id="divTimeLine:eventosTimeLineElement"]/div[2]'):
-            self.div = 'eventosTimeLineElement'
-        else:
-            raise MildException("Erro ao abrir processo (detecção da div)", self.uf, self.plataforma, self.prc_id)
+        inicio = time.time()
+        while True:
+            if self.driver.find_element_by_xpath('//*[@id="divTimeLine:divEventosTimeLine"]/div[3]'):
+                self.div = 'divEventosTimeLine'
+                return
+            elif self.driver.find_element_by_xpath('//*[@id="divTimeLine:eventosTimeLineElement"]/div[2]'):
+                self.div = 'eventosTimeLineElement'
+                return
+
+            tempoTotal = time.time() - inicio
+            if tempoTotal >= 30:
+                raise MildException("Erro ao abrir processo (detecção da div)", self.uf, self.plataforma, self.prc_id)
+
 
     # FECHA A JANELA DO PROCESSO ABERTO ATUALMENTE
     def fecha_processo(self):
@@ -1270,5 +1295,8 @@ class Pje(PrimeiroGrau):
                 self.driver.execute_script("A4J.AJAX.Submit('navbar',event,{'similarityGroupingId':'navbar:linkAbaAutosHome','parameters':{'navbar:linkAbaAutosHome':'navbar:linkAbaAutosHome'} } );")
                 self.wait(60)
                 return False
+
+        self.driver.execute_script("A4J.AJAX.Submit('navbar',event,{'similarityGroupingId':'navbar:linkAbaAutosHome','parameters':{'navbar:linkAbaAutosHome':'navbar:linkAbaAutosHome'} } );")
+        self.wait(60)
 
         return True
