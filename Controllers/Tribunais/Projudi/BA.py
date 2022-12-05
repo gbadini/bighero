@@ -100,7 +100,8 @@ class BA(ProjudiV2):
             try:
                 self.driver.find_element_by_id('numeroProcesso').clear()
                 self.driver.find_element_by_id('numeroProcesso').send_keys(numero_busca)
-                self.driver.find_element_by_id("numeroProcesso").send_keys(Keys.ENTER)
+                # self.driver.find_element_by_id("numeroProcesso").send_keys(Keys.ENTER)
+                self.driver.execute_script("document.getElementsByName('Buscar')[0].click()")
                 break
             except:
                 time.sleep(1)
@@ -109,8 +110,8 @@ class BA(ProjudiV2):
         self.wait_complete()
         inicio = time.time()
         while True:
-            if time.time() - inicio > 10:
-                raise CriticalException("Timeout Busca", self.uf, self.plataforma, self.prc_id, False)
+            if time.time() - inicio > 60:
+                raise MildException("Timeout Busca", self.uf, self.plataforma, self.prc_id, False)
 
             if self.driver.find_element_by_class_name('erro'):
                 if self.driver.find_element_by_class_name('erro').text.find('Verifique os seguintes erros') > -1:
@@ -144,6 +145,13 @@ class BA(ProjudiV2):
                     el = self.driver.find_element_by_xpath('/html/body/strong[1]/p')
                     if el:
                         if el.text.find('Segredo de Justiça') > -1:
+                            if self.proc_data['prc_codigo'] is None:
+                                url = self.driver.execute_script('return window.location')
+                                parsed = urlparse.urlparse(url['href'])
+                                parse_qs(parsed.query)
+                                url_params = parse_qs(parsed.query)
+                                prc_codigo = url_params['numeroProcesso'][0]
+                                Processo.update_simples(self.active_conn, self.prc_id, {'prc_codigo': prc_codigo})
                             return True
 
                 if self.driver.find_element_by_xpath('/html/body/center/p'):
@@ -229,7 +237,8 @@ class BA(ProjudiV2):
                     div = divs[-1]
                     time.sleep(0.5)
 
-                    div.click()
+                    # div.click()
+                    self.driver.execute_script("arguments[0].click()", div)
                     self.driver.switch_to.default_content()
                     self.driver.switch_to.frame(self.driver.find_element_by_xpath('/html/frameset/frameset/frame[2]'))
                     self.wait_complete()
@@ -285,6 +294,9 @@ class BA(ProjudiV2):
             data_cad = datetime.strptime(data_ultima_mov, '%d/%m/%Y %H:%M')
 
             acp_tipo = self.driver.find_element_by_xpath('//*[@id="Arquivos"]/table/tbody/tr[2]/td/table/tbody/tr/td[1]').get_attribute('innerHTML')
+            if acp_tipo is None:
+                raise MildException("Erro ao capturar tipo mov", self.uf, self.plataforma, self.prc_id, False)
+            
             acp_tipo = acp_tipo.replace('\r','').replace('\n','').replace('&nbsp;','')
 
             acp_tipo = strip_html_tags(acp_tipo)
@@ -900,4 +912,4 @@ class BA(ProjudiV2):
         if self.tipo_projudi == 2:
             return False
 
-        return True
+        return False

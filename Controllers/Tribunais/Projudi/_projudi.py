@@ -498,6 +498,12 @@ class Projudi(PrimeiroGrau):
         prc_numero2 = localiza_cnj(prc_numero2)
         prc['prc_numero2'] = prc_numero2
 
+        url = self.driver.execute_script('return window.location')
+        parsed = urlparse.urlparse(url['href'])
+        parse_qs(parsed.query)
+        url_params = parse_qs(parsed.query)
+        if 'numeroProcesso' in url_params:
+            prc['prc_codigo'] = url_params['numeroProcesso'][0]
 
         return prc
 
