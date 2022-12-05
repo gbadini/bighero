@@ -149,28 +149,31 @@ class SegundoGrau(PrimeiroGrau):
                     arquivos_base = ProcessoArquivo.select(self.conn[db], proc['prc_id'], self.plataforma, pra_grau=grau_down, pra_rec_id=pra_rec_id)
                     pendentes = []
                     # VERIFICA QUAIS ARQUIVOS ESTÃO COM O DOWNLOAD PENDENTE
-                    legado = False
-                    for arb in arquivos_base:
-                        if arb['pra_erro']:
-                            if arb['pra_legado']:
-                                legado = True
-                            pendentes.append(arb)
+                    if proc['prc_situacao'] in ('Arquivo Morto','Morto','Encerrado'):
+                        legado = True
+                    else:
+                        legado = False
+                        for arb in arquivos_base:
+                            if arb['pra_erro']:
+                                if arb['pra_legado']:
+                                    legado = True
+                                pendentes.append(arb)
 
                     full = self.completo or proc['rec_data_update'] is None
-                    if not full and self.tipo != 1 and (len(pendentes) == 0 or legado):
+                    if not full and self.tipo != 1 and (self.ignora_arq_pend or len(pendentes) == 0 or legado):
                         if self.ultima_movimentacao(proc['cadastro'], proc['prc_id'], self.conn[db]):
-                            Recurso.update(self.conn[db], proc['prc_id'], proc['rec_id'], self.plataforma, {})
-                            Processo.update(self.conn[db], proc['prc_id'], self.plataforma, True, {}, grau=2)
-                            continue
+                            if not self.confere_arquivos_novos(arquivos_base):
+                                Recurso.update(self.conn[db], proc['prc_id'], proc['rec_id'], self.plataforma, {})
+                                Processo.update(self.conn[db], proc['prc_id'], self.plataforma, True, {}, grau=2)
+                                continue
 
                     if self.nao_varrer:
                         if proc['rec_id'] is not None:
                             if legado or len(pendentes) > 0 or self.confere_arquivos_novos(arquivos_base):
                                 ignorar_id.append(str(proc['rec_id']))
 
-                        if self.confere_arquivos_novos():
-                            print("Pulando Varredura")
-                            continue
+                        print("Pulando Varredura")
+                        continue
 
                     # time.sleep(9999)
                     if self.tipo == 2 or self.tipo == 3:

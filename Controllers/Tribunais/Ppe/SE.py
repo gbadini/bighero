@@ -376,5 +376,5 @@ class SE(Ppe):
         return []
 
     # MÉTODO PARA A BUSCA DO PROCESSO NO TRIBUNAL
-    def confere_arquivos_novos(self):
+    def confere_arquivos_novos(self, arquivos_base):
         return False
