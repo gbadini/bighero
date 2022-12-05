@@ -6,9 +6,9 @@ class DF2g(Pje2g):
     def __init__(self):
         super().__init__()
         self.pagina_inicial = "https://pje2i.tjdft.jus.br/pje/login.seam"
-
         self.pagina_busca = "https://pje2i.tjdft.jus.br/pje/Processo/ConsultaProcesso/listView.seam"
         # self.pagina_busca = "https://pje2i.tjdft.jus.br/pje/Processo/CadastroPeticaoAvulsa/peticaoavulsa.seam"
+        self.ignora_arq_pend = True
 
     # MÉTODO PARA A BUSCA DO PROCESSO NO TRIBUNAL
     def busca_processo(self, numero_busca):
@@ -83,27 +83,28 @@ class DF2g(Pje2g):
     def confere_segredo(self, numero_busca, codigo=None):
         self.confere_cnj(numero_busca)
 
-        # CAPTURA OS ARQUIVOS SALVOS NA BASE
-        arquivos_base = ProcessoArquivo.select(self.active_conn, self.proc_data['prc_id'], self.plataforma, pra_grau=None)
-        # VERIFICA QUAIS ARQUIVOS ESTÃO COM O DOWNLOAD PENDENTE
-        pend = False
-        for arb in arquivos_base:
-            if arb['pra_erro']:
-                if arb['pra_legado']:
-                    break
-                pend = True
-                break
+        # # CAPTURA OS ARQUIVOS SALVOS NA BASE
+        # arquivos_base = ProcessoArquivo.select(self.active_conn, self.proc_data['prc_id'], self.plataforma, pra_grau=None)
+        # # VERIFICA QUAIS ARQUIVOS ESTÃO COM O DOWNLOAD PENDENTE
+        # pend = False
+        # for arb in arquivos_base:
+        #     if arb['pra_erro']:
+        #         if arb['pra_legado']:
+        #             break
+        #         pend = True
+        #         break
 
-        if self.completo or self.proc_data['rec_data_update'] is None  or pend:
-            trs = self.driver.find_elements_by_xpath('//*[@id="fPP:processosTable:tb"]/tr')
-            for tr in trs:
-                td2 = tr.find_element_by_xpath('td[2]')
-                id = td2.get_attribute('id')
-                f_id = id.split(':')
-                if f_id[2] == self.proc_data['rec_codigo']:
-                    self.abre_aba_processo()
-                    self.wait(10)
-                    break
+        if not self.nao_varrer:
+            if self.completo or self.proc_data['rec_data_update'] is None:
+                trs = self.driver.find_elements_by_xpath('//*[@id="fPP:processosTable:tb"]/tr')
+                for tr in trs:
+                    td2 = tr.find_element_by_xpath('td[2]')
+                    id = td2.get_attribute('id')
+                    f_id = id.split(':')
+                    if f_id[2] == self.proc_data['rec_codigo']:
+                        self.abre_aba_processo()
+                        self.wait(10)
+                        break
 
         # achei = False
         # if check_text(self.driver, '//*[@id="fPP:processosPeticaoGridPanel_body"]/dl', 'sigilo'):
@@ -136,8 +137,8 @@ class DF2g(Pje2g):
                 break
 
         # CONFERE SE O PROCESSO ESTÁ HABILITADO
-        if not try_click(self.driver, '//*[@id="fPP:processosTable:tb"]/tr['+str(i_tr)+']/td[1]/a[1]'):
-            print('//*[@id="fPP:processosTable:tb"]/tr['+str(i_tr)+']/td[1]/a[1]')
+        if not try_click(self.driver, '//*[@id="fPP:processosTable:tb"]/tr['+str(i_tr)+']/td[2]/a[1]'):
+            # print('//*[@id="fPP:processosTable:tb"]/tr['+str(i_tr)+']/td[1]/a[1]')
             raise MildException("Botão de abrir não localizado", self.uf, self.plataforma, self.prc_id, False)
 
         inicio = time.time()
@@ -179,12 +180,12 @@ class DF2g(Pje2g):
             ultima_mov = l
             break
 
-        ultima_esp = self.driver.find_element_by_xpath('//*[@id="fPP:processosTable:tb"]/tr['+str(i_tr)+']/td[8]').text
+        ultima_esp = self.driver.find_element_by_xpath('//*[@id="fPP:processosTable:tb"]/tr['+str(i_tr)+']/td[9]').text
         ultima_esp = self.prepara_ultima_mov(ultima_esp)
         for i,l in enumerate(lista):
             if self.prepara_ultima_mov(l['acp_esp']) == ultima_esp:
                 if l['acp_cadastro'] == ultima_mov['acp_cadastro']:
-                    print(self.prepara_ultima_mov(l['acp_esp']), ultima_esp)
+                    # print(self.prepara_ultima_mov(l['acp_esp']), ultima_esp)
                     return True
 
             if i == 10:
@@ -225,3 +226,6 @@ class DF2g(Pje2g):
                 return True
 
         raise MildException("Número CNJ Diferente - "+numero_busca + ' - ' + numero_site, self.uf, self.plataforma, self.prc_id)
+
+    def confere_arquivos_novos(self, arquivos_base):
+        return False

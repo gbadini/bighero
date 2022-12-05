@@ -8,6 +8,7 @@ class DF(Pje):
         self.pagina_inicial = "https://pje.tjdft.jus.br/pje/login.seam"
         # self.pagina_busca = "https://pje.tjdft.jus.br/pje/Processo/CadastroPeticaoAvulsa/peticaoavulsa.seam"
         self.pagina_busca = "https://pje.tjdft.jus.br/pje/Processo/ConsultaProcesso/listView.seam"
+        self.ignora_arq_pend = True
 
     # MÉTODO PARA A BUSCA DO PROCESSO NO TRIBUNAL
     def busca_processo(self, numero_busca):
@@ -80,20 +81,21 @@ class DF(Pje):
     def confere_segredo(self, numero_busca, codigo=None):
         self.confere_cnj(numero_busca)
 
-
         # CAPTURA OS ARQUIVOS SALVOS NA BASE
-        arquivos_base = ProcessoArquivo.select(self.active_conn, self.proc_data['prc_id'], self.plataforma, pra_grau=None)
-        # VERIFICA QUAIS ARQUIVOS ESTÃO COM O DOWNLOAD PENDENTE
-        pend = False
-        for arb in arquivos_base:
-            if arb['pra_erro']:
-                if arb['pra_legado']:
-                    break
-                pend = True
-                break
-                
-        if self.completo or self.proc_data['prc_data_pje'] is None or pend:
-            self.abre_processo()
+        # arquivos_base = ProcessoArquivo.select(self.active_conn, self.proc_data['prc_id'], self.plataforma, pra_grau=None)
+        # # VERIFICA QUAIS ARQUIVOS ESTÃO COM O DOWNLOAD PENDENTE
+        # pend = False
+        # for arb in arquivos_base:
+        #     if arb['pra_erro']:
+        #         if arb['pra_legado']:
+        #             break
+        #         pend = True
+        #         break
+
+        if not self.nao_varrer:
+            # if self.completo or self.proc_data['prc_data_pje'] is None or pend:
+            if self.completo or self.proc_data['prc_data_pje'] is None:
+                self.abre_processo()
 
         # achei = False
         # if check_text(self.driver, '//*[@id="fPP:processosPeticaoGridPanel_body"]/dl', 'sigilo'):
@@ -117,36 +119,40 @@ class DF(Pje):
         '''
 
         # CONFERE SE O PROCESSO ESTÁ HABILITADO
-        if not try_click(self.driver, '//*[@id="fPP:processosTable:tb"]/tr[1]/td[1]/a[1]'):
-            raise MildException("Botão de abrir não localizado", self.uf, self.plataforma, self.prc_id, False)
+        # if not try_click(self.driver, '//*[@id="fPP:processosTable:tb"]/tr[1]/td[2]/a[1]'):
+        #     if not try_click(self.driver, '//*[@id="fPP:processosTable:tb"]/tr[1]/td[1]/a[1]'):
+        #         raise MildException("Botão de abrir não localizado", self.uf, self.plataforma, self.prc_id, False)
 
-        inicio = time.time()
-        while True:
-            wh = self.driver.window_handles
-            # SE O PROCESSO ESTÁ HABILITADO, CHAMA O MÉTODO PADRÃO
-            if len(wh) == 2:
-                self.alterna_janela()
-                if check_text(self.driver, '//*[@id="pageBody"]/div/div[2]/pre/dl', 'Sem permissão para acessar a página'):
-                    self.fecha_processo()
-                    self.abre_aba_processo()
-                    self.wait(10)
-                    if check_text(self.driver, '//*[@id="pageBody"]/div/div[2]/pre/dl',
-                                  'Sem permissão para acessar a página'):
-                        raise MildException("Erro de permissão", self.uf, self.plataforma, self.prc_id)
-                return super().ultima_movimentacao(ultima_data, prc_id, base)
+        # inicio = time.time()
+        # while True:
+        #     wh = self.driver.window_handles
+        #     # SE O PROCESSO ESTÁ HABILITADO, CHAMA O MÉTODO PADRÃO
+        #     if len(wh) == 2:
+        #         self.alterna_janela()
+        #         if check_text(self.driver, '//*[@id="pageBody"]/div/div[2]/pre/dl', 'Sem permissão para acessar a página'):
+        #             self.fecha_processo()
+        #             self.abre_aba_processo()
+        #             self.wait(10)
+        #             if check_text(self.driver, '//*[@id="pageBody"]/div/div[2]/pre/dl',
+        #                           'Sem permissão para acessar a página'):
+        #                 raise MildException("Erro de permissão", self.uf, self.plataforma, self.prc_id)
+        #         return super().ultima_movimentacao(ultima_data, prc_id, base)
+        #
+        #     # SE NÃO ESTÁ HABILITADO, CONTINUA NO METODO CUSTOMIZADO
+        #     if aguarda_alerta(self.driver, tempo=0.1, aceitar=False, rejeitar=True):
+        #         break
+        #
+        #     # CONFERE SE O PAINEL AVISANDO SOBRE O LIMITE DE CONSULTAS ESTÁ SENDO EXIBIDO
+        #     if (time.time() - inicio) >= 10:
+        #         panel = self.driver.find_element_by_xpath('//*[@id="panelAlertaContentTable"]/tbody/tr[2]/td')
+        #         if panel and panel.is_displayed():
+        #             if panel.text.upper().find('LIMITE DIÁRIO DE CONSULTAS') > -1:
+        #                 raise FatalException('Limite diário excedido. Utilizar outro certificado', self.uf, self.plataforma, self.prc_id)
+        #         else:
+        #             raise MildException("Erro ao buscar processo (Detecção de Alert)", self.uf, self.plataforma, self.prc_id, False)
 
-            # SE NÃO ESTÁ HABILITADO, CONTINUA NO METODO CUSTOMIZADO
-            if aguarda_alerta(self.driver, tempo=0.1, aceitar=False, rejeitar=True):
-                break
 
-            # CONFERE SE O PAINEL AVISANDO SOBRE O LIMITE DE CONSULTAS ESTÁ SENDO EXIBIDO
-            if (time.time() - inicio) >= 10:
-                panel = self.driver.find_element_by_xpath('//*[@id="panelAlertaContentTable"]/tbody/tr[2]/td')
-                if panel and panel.is_displayed():
-                    if panel.text.upper().find('LIMITE DIÁRIO DE CONSULTAS') > -1:
-                        raise FatalException('Limite diário excedido. Utilizar outro certificado', self.uf, self.plataforma, self.prc_id)
-                else:
-                    raise MildException("Erro ao buscar processo (Detecção de Alert)", self.uf, self.plataforma, self.prc_id, False)
+        aguarda_alerta(self.driver, tempo=0.1, aceitar=False, rejeitar=True)
 
         lista = Acompanhamento.lista_movs(base, prc_id, self.plataforma, rec_id=self.rec_id, acp_grau=self.grau, order_by=True)
         lista.reverse()
@@ -159,10 +165,24 @@ class DF(Pje):
             ultima_mov = l
             break
 
-        ultima_esp = self.driver.find_element_by_xpath('//*[@id="fPP:processosTable:tb"]/tr/td[8]').text
+        ultima_esp = self.driver.find_element_by_xpath('//*[@id="fPP:processosTable:tb"]/tr/td[9]').text
         ultima_esp = self.prepara_ultima_mov(ultima_esp)
         for i,l in enumerate(lista):
-            if self.prepara_ultima_mov(l['acp_esp']) == ultima_esp:
+            acp_esp = self.prepara_ultima_mov(l['acp_esp'])
+
+            if ultima_esp == 'DESENTRANHADO O DOCUMENTO':
+                data_1_mes = datetime.now() - timedelta(days=30)
+                if ultima_mov['acp_cadastro'] < data_1_mes:
+                    return True
+
+            if ultima_esp.find('CLASSE PROCESSUAL') == 0 and ultima_esp.find('ALTERADA PARA') > -1:
+                if acp_esp == 'ARQUIVADO DEFINITIVAMENTE':
+                    # date_time_obj = datetime.strptime('01/01/2017', '%d/%m/%Y')
+                    data_5_anos = datetime.now() - timedelta(days=5 * 365)
+                    if ultima_mov['acp_cadastro'] < data_5_anos:
+                        return True
+
+            if acp_esp == ultima_esp:
                 if l['acp_cadastro'] == ultima_mov['acp_cadastro']:
                     # print(self.prepara_ultima_mov(l['acp_esp']), ultima_esp)
                     return True
@@ -197,3 +217,6 @@ class DF(Pje):
                 return True
 
         raise MildException("Número CNJ Diferente - "+numero_busca + ' - ' + numero_site, self.uf, self.plataforma, self.prc_id)
+
+    def confere_arquivos_novos(self, arquivos_base):
+        return False
