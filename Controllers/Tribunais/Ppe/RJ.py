@@ -194,12 +194,13 @@ class RJ(Ppe):
             if find_string(titulo, chaves):
                 divs = conts[i].find_elements_by_tag_name('div')
                 for div in divs:
-                    if div.text.strip() == 'Não há':
+                    rec_numero = div.text.strip()
+                    if rec_numero == 'Não há':
                         continue
 
                     result = Recurso.select(base, proc['prc_id'], rec_numero=div.text.strip())
                     if len(result) == 0:
-                        Recurso.insert(base, {'rec_prc_id': proc['prc_id'], 'rec_numero': div.text.strip(), 'rec_plt_id': self.plataforma})
+                        Recurso.insert(base, {'rec_prc_id': proc['prc_id'], 'rec_numero': rec_numero, 'rec_plt_id': self.plataforma})
                         achei = True
 
             chaves = ('Processo(s) Apensado(s):',)
@@ -649,7 +650,11 @@ class RJ(Ppe):
                 continue
 
             tipo = self.driver.find_element_by_xpath('//*[@id="lista-personagens"]/div/div/div[2]/div/div/p-table/div/div/table/tbody/tr[' + str(i) + ']/td[1]').text
+
             if tipo != 'Advogado':
+                if find_string(tipo, self.titulo_partes['ignorar']):
+                    continue
+
                 polo = ''
                 if find_string(tipo, self.titulo_partes['ativo']):
                     polo = 'Polo Ativo'
@@ -658,11 +663,9 @@ class RJ(Ppe):
                     polo = 'Polo Passivo'
                     continue
 
+
                 # if polo == '':
                 #     raise MildException("polo vazio " + tipo, self.uf, self.plataforma, self.prc_id)
-
-            # if find_string(tipo,self.titulo_partes['ignorar']):
-            #     continue
 
             if polo == '':
                 raise MildException("polo vazio "+tipo, self.uf, self.plataforma, self.prc_id)

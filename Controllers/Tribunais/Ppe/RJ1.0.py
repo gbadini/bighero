@@ -652,5 +652,5 @@ class RJ(Ppe):
         self.driver.switch_to.window(self.driver.window_handles[-1])
         
     # MÉTODO PARA A BUSCA DO PROCESSO NO TRIBUNAL
-    def confere_arquivos_novos(self):
+    def confere_arquivos_novos(self, arquivos_base):
         return False
