@@ -32,7 +32,7 @@ estados = {
     'rek': ('AC', 'AL', 'AM', 'AP', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MG', 'MS', 'MT', 'PA', 'PB', 'PE', 'PI', 'PR', 'RJ', 'RN', 'RO', 'RR', 'RS', 'SC', 'SE', 'SP', 'TO',
             'TRT01','TRT02','TRT03','TRT04','TRT05','TRT06','TRT07','TRT08','TRT09','TRT10','TRT11','TRT12','TRT13','TRT14',
             'TRT15','TRT16','TRT17','TRT18','TRT19','TRT20','TRT21','TRT22','TRT23','TRT24','TRF01','TRF02','TRF03','TRF04','TRF05'),
-    'hasson': ('PR',),
+    'hasson': ('PR','TRF04'),
 }
 
 pagamento = {
@@ -71,30 +71,32 @@ cidades = {
     'SC': {'Federal de Santa Catarina': 'Florianópolis', 'Florianópolis': 'Florianópolis', 'Juízo do juizado especial cível e criminal e de violência doméstica e familiar contra a mulher': 'Itajaí'},
     'RO': {'Porto Velho': 'Porto Velho',},
     'AM': {'Manaus': 'Manaus',},
-    'AC': {'Rio Branco': 'Rio Branco',},
+    'AC': {'Rio Branco': 'Rio Branco', 'Seção Judiciária Do Acre': 'Rio Branco'},
     'MS': {'Campo Grande': 'Campo Grande',},
     'MA': {'Juizado Especial Cível e das Relações de Consumo': 'São Luís', 'Juizado Cível E Das Relações De Consumo': 'São Luís','º Juizado Especial Cível das Relações de Consumo': 'São Luís',},
     'AP': {'Macapá': 'Macapá',},
     'RR': {'Boa Vista': 'Boa Vista',},
     'MT': {'Cuiabá': 'Cuiabá', 'Campo novo dos parecis':'Campo novo dos parecis','Sto antônio do leverger': 'Santo antônio do leverger'},
     'TO': {'Palmas': 'Palmas', },
-    'PI': {'Teresina': 'Teresina', 'São Rdo Nonato': 'São Raimundo Nonato', 'Piripiri': 'Piripiri'},
+    'PI': {'Teresina': 'Teresina', 'São Rdo Nonato': 'São Raimundo Nonato', 'Piripiri': 'Piripiri', 'Seção Judiciária Do Piauí': 'Teresina'},
     'RJ': {'Rio de Janeiro': 'Rio de Janeiro', },
     'PA': {'Belém': 'Belém', 'Cejusc procon': 'Belém','ª Vara do Juizado Especial Cível': 'Belém',},
-    'BA': {'Salvador': 'Salvador', 'vsje': 'Salvador', 'FSJE': 'Salvador', 'REGIÃO METROPOLITANA': 'Salvador', 'sto antônio de jesus': 'Santo Antônio de Jesus','Vit. da conquista':'Vitória da Conquista', 'Itabuna': 'Itabuna'},
+    'BA': {'Salvador': 'Salvador', 'vsje': 'Salvador', 'FSJE': 'Salvador', 'REGIÃO METROPOLITANA': 'Salvador', 'sto antônio de jesus': 'Santo Antônio de Jesus','Vit. da conquista':'Vitória da Conquista', 'Itabuna': 'Itabuna', 'Seção Judiciária Da Bahia': 'Salvador'},
     'AL': {'Maceió': 'Maceió', },
     'RS': {'Porto Alegre': 'Porto Alegre', },
     'PR': {'Curitiba': 'Curitiba',},
-    'MG': {'Belo Horizonte': 'Belo Horizonte','ª UNIDADE JURISDICIONAL CÍVEL': 'Belo Horizonte'},
+    'MG': {'Belo Horizonte': 'Belo Horizonte','ª UNIDADE JURISDICIONAL CÍVEL': 'Belo Horizonte','Seção Judiciária De Minas Gerais': 'Belo Horizonte',},
     'CE': {'Fortaleza': 'Fortaleza', 'unidade do juizado especial cível': 'Fortaleza', 'º juizado especial cível e criminal': 'Fortaleza', 'são gonçalo do amarante': 'São Gonçalo do Amarante'},
     'PE': {'Recife': 'Recife', 'Gabinete Do Des': 'Recife'},
-    'PB': {'João Pessoa': 'João Pessoa','Centro administrativo integrado francisco de oliveira braga':'Conceição'},
+    'PB': {'João Pessoa': 'João Pessoa','Centro administrativo integrado francisco de oliveira braga':'Conceição','Pb / João Pessoa':'João Pessoa',},
     'SE': {'Aracaju': 'Aracaju',},
     'RN': {'Natal': 'Natal',},
     'ES': {'Vitória': 'Vitória'},
-    'SP': {'Foro central juizados especiais cíveis': 'São Paulo','Foro central cível':'São Paulo'}
+    'SP': {'Foro central juizados especiais cíveis': 'São Paulo','Foro central cível':'São Paulo'},
+    'GO': {'Seção Judiciária De Goiás': 'Goiânia',},
+    'DF': {'Seção Judiciária Do Distrito Federal': 'Brasília',}
 }
-tipos_pje = ('DEFERIDO','EXPEDIDO ALVARÁ','DECORRIDO PRAZO','CANCELADA','RETORNO','ENTREGA','EXTINTA A PUNIBILIDADE','EXPEDIDA/CERTIFICADA','QUEBRA DE SIGILO BANCÁRIO','CONFIRMADA','JULGADA PROCEDENTE','JULGADA IMPROCEDENTE','JULGADA PARCIALMENTE PROCEDENTE','EMISSÃO DE CUSTA','PEDIDO CONHECIDO EM PARTE','ALTERAÇÃO','RECEBIDA A EMENDA','AGUARDANDO','VINCULAÇÃO','AGUARD. CUMPRIMENTO','EXCLUSÃO','DECLARADA','AO JUIZO','REDISTRIBUIÇÃO','DISTRIBUIÇÃO','JUNTAR','BAIXA','CONFLITO','OUTROS','AUDIÊNCIA','CADASTRO','CERTIDÃO','CERTIDAO','SUSPENSO','REMESSA','APENSADO','EXPEDIR OFICIO','AO GABINETE','ACOLHIDA','INDISPONIBILIDADE','REIMPRESSÃO','REJEITADA','OUTRAS DECISÕES','EFEITO SUSPENSIVO','RECURSO','IMPEDIMENTO','SUSPEIÇÃO','RETIFICAÇÃO','ASSISTÊNCIA JUDICIÁRIA GRATUITA','INDEFERIDA','ATO ORDINATÓRIO','EXTINTA A EXECUÇÃO','DETERMINADO','ENVIADO','DETERMINADA REQUISIÇÃO','EVENTO PROJUDI','CONTA ATUALIZADA','PROFERIDA SENTENÇA','MIGRADO','MEDIDA LIMINAR','BLOQUEIO/PENHORA','RETIFICADO','EXTINTO','DESENTRANHAMENTO','CONVERTIDO','EMBARGOS DE DECLARAÇÃO','MANDADO DEVOLVIDO','PROCESSO SUSPENSO','RECEBIDO','SUSPENSÃO','JUNTADA','ALTERADA','EXPEDIÇÃO','ANTECIPAÇÃO','CONCLUSOS','AUDIÊNCIA','REDISTRIBUÍDO','DISTRIBUÍDO','HOMOLOGADO','HOMOLOGADA','INCOMPETÊNCIA','RECEBIDOS OS AUTOS','REMETIDOS OS AUTOS','PUBLICADO','TRANSITADO EM JULGADO','JULGADO','DECISÃO','DESARQUIVADO','CUMPRIMENTO DE SENTENÇA','ARQUIVADO','ARQUIVAMENTO','DESPACHO','CÁLCULO','DISPONIBILIZADO');
+tipos_pje = ('DEFERIDO','EXPEDIDO ALVARÁ','DECORRIDO PRAZO','CANCELADA','RETORNO','ENTREGA','EXTINTA A PUNIBILIDADE','EXPEDIDA/CERTIFICADA','QUEBRA DE SIGILO BANCÁRIO','CONFIRMADA','JULGADA PROCEDENTE','JULGADA IMPROCEDENTE','JULGADA PARCIALMENTE PROCEDENTE','EMISSÃO DE CUSTA','PEDIDO CONHECIDO EM PARTE','ALTERAÇÃO','RECEBIDA A EMENDA','AGUARDANDO','VINCULAÇÃO','AGUARD. CUMPRIMENTO','EXCLUSÃO','DECLARADA','AO JUIZO','REDISTRIBUIÇÃO','DISTRIBUIÇÃO','JUNTAR','BAIXA','CONFLITO','OUTROS','AUDIÊNCIA','CADASTRO','CERTIDÃO','CERTIDAO','SUSPENSO','REMESSA','APENSADO','EXPEDIR OFICIO','AO GABINETE','ACOLHIDA','INDISPONIBILIDADE','REIMPRESSÃO','REJEITADA','OUTRAS DECISÕES','EFEITO SUSPENSIVO','RECURSO','IMPEDIMENTO','SUSPEIÇÃO','RETIFICAÇÃO','ASSISTÊNCIA JUDICIÁRIA GRATUITA','INDEFERIDA','ATO ORDINATÓRIO','EXTINTA A EXECUÇÃO','DETERMINADO','ENVIADO','DETERMINADA REQUISIÇÃO','EVENTO PROJUDI','CONTA ATUALIZADA','PROFERIDA SENTENÇA','MIGRADO','MEDIDA LIMINAR','BLOQUEIO/PENHORA','RETIFICADO','EXTINTO','DESENTRANHAMENTO','CONVERTIDO','EMBARGOS DE DECLARAÇÃO','MANDADO DEVOLVIDO','PROCESSO SUSPENSO','RECEBIDO','SUSPENSÃO','JUNTADA','ALTERADA','EXPEDIÇÃO','ANTECIPAÇÃO','CONCLUSOS','AUDIÊNCIA','REDISTRIBUÍDO','DISTRIBUÍDO','HOMOLOGADO','HOMOLOGADA','INCOMPETÊNCIA','RECEBIDOS OS AUTOS','REMETIDOS OS AUTOS','PUBLICADO','TRANSITADO EM JULGADO','JULGADO','DECISÃO','DESARQUIVADO','CUMPRIMENTO DE SENTENÇA','ARQUIVADO','ARQUIVAMENTO','DESPACHO','CÁLCULO','DISPONIBILIZADO')
 
 # ABRE O NAVEGADOR E CRIA O WEBDRIVER
 def create_browser_instance(caminho_download, headless=False, wait_loading=True, browser='Chrome'):
@@ -499,9 +501,14 @@ def get_and(uf, plataforma, grau=1):
             3: " (prc_esaj is null or prc_esaj=0)"
         }
 
+    # ands['AP'] = {
+    #     2: " (prc_numero like '6%')",
+    #
+    # }
+
     ands['BA'] = {
         2: " (prc_projudi = 0 or prc_projudi is null)",
-        3: " (prc_pje = 0 or prc_pje is null) and (prc_esaj = 0 or prc_esaj is null)",
+        3: " (prc_pje = 0 or prc_pje is null) and (prc_esaj = 0 or prc_esaj is null) and (prc_projudi = 1 or prc_projudi is null)",
         4: " ((prc_pje = 0 and prc_esaj=0 and prc_projudi=0 and prc_fisico is null) or (prc_fisico=1 and (prc_segredo=0 or prc_segredo is null))) and (prc_numero LIKE '%805%' OR prc_numero LIKE '%8.05%')",
         5: " (prc_pje = 0 or prc_pje is null) and (prc_projudi = 0 or prc_projudi is null)"
     }
@@ -681,6 +688,12 @@ def localiza_comarca(texto, uf):
     if texto.upper().find('CAPITAL') > -1:
         return capitais[uf]
 
+    if texto.upper().find('-'+uf.upper()) == len(texto)-3:
+        texto = texto[:-3].strip()
+
+    if texto.upper().find(uf.upper()+' / ') == 0:
+        texto = texto[4:].strip()
+
     if uf in cidades:
         for c in cidades[uf]:
             if texto.upper().find(c.upper()) > -1:
@@ -689,8 +702,8 @@ def localiza_comarca(texto, uf):
     # if texto.upper().find(capitais[uf].upper()) > -1:
     #     return capitais[uf]
 
-    inicio = ['Cartas Precatórias Cíveis e Criminais de ','Comarca de', 'Cível de', 'Civel de', '- ', 'Central de', 'especiais de ', 'Especial de', 'Consumo de ', 'Criminal de ', 'Vara de', 'VARA UNICA DE', 'VARA ÚNICA DE', 'Vara Cível da Comarca', 'Criminal do', 'Cível do', 'J.E. Civel ', 'Fórum de ', 'Escrivania de','Foro de ','º jef de ','Juizado Especial Cível ','Jecc De ','ª Vara Do Trabalho De','Vara Do Trabalho De','Falências E Recuperações Judiciais De','Regional Do','Regional Da']
-    fim = [' - Fórum', ' - Juizado','- Vara d','- Varas', '- Vara Cível', '- Complexo Judiciário', ' - Justiça Comum', ' - JECC', ' JECC de', ' - Juizados','(\\s+)(\\-)(\\s+)(\\d+)(º JUIZADO)','(\\s+)(\\-)(\\s+)(\\d+)(ª VARA CÍVEL)','(\\s+)(\\-)(\\s+)(\\d+)(ª VARA DA )','(\\s+)(\\-)(\\s+)(\\d+)(ª VARA DE )','(\\s+)(\\-)(\\s+)(\\d+)(º CEJUSC)',' Anexo I',' - Vara Judicial',' - Unidades dos Juizados']
+    inicio = ['Cartas Precatórias Cíveis e Criminais de ','Comarca de', 'Cível de', 'Civel de', '- ', 'Central de', 'especiais de ', 'Especial de', 'Consumo de ', 'Criminal de ', 'Vara de', 'VARA UNICA DE', 'VARA ÚNICA DE', 'Vara Cível da Comarca', 'Criminal do', 'Cível do', 'J.E. Civel ', 'Fórum de ', 'Escrivania de','Foro de ','º jef de ','Juizado Especial Cível ','Jecc De ','ª Vara Do Trabalho De','Vara Do Trabalho De','Falências E Recuperações Judiciais De','Regional Do','Regional Da','Sucessões Inf. E Juvent. De','Subseção Judiciária De']
+    fim = [' - Fórum', ' - Juizado','- Vara d','- Varas', '- Vara Cível', '- Complexo Judiciário', '(\\()(JUIZADO ESPECIAL)', ' - Justiça Comum', ' - JECC', ' JECC de', ' - Juizados','(\\s+)(\\-)(\\s+)(\\d+)(º JUIZADO)','(\\s+)(\\-)(\\s+)(\\d+)(ª VARA CÍVEL)','(\\s+)(\\-)(\\s+)(\\d+)(ª VARA DA )','(\\s+)(\\-)(\\s+)(\\d+)(ª VARA DE )','(\\s+)(\\-)(\\s+)(\\d+)(º CEJUSC)',' Anexo I',' - Vara Judicial',' - Unidades dos Juizados']
 
     for f in fim:
         if f.find('\\') == -1:
@@ -1104,7 +1117,7 @@ def remove_acentos(texto):
 
 def get_tipo_partes(tipo=None, grau=1):
     titulo_partes = {
-        'ignorar': ('Beneficiário', 'Administrador', 'Síndico', 'Cônjuge', 'Alienante', 'Ass Def', 'Def. Públic','Defª. Públic', 'Defensor','Ass.M.P.', 'Depositário', 'Assistente', 'Juízo Deprecant', 'Informante', 'Complementares', 'MPAM', 'Ministério Público', 'Testemun', 'Advogad', 'Arrematante', 'Leiloeiro', 'Perito', 'Curad', 'Defensor públic', 'Def. Púb.', 'Perit', 'Herdeiro', 'Criança', 'Advogada','Procª. Justiça' ,'Proc. Justiça', 'Estagiári','Testamenteira', 'Cur. Esp.', 'Cur. Especial', 'Reconvinte', 'Reconvind','Custos legis','Adesivo','Defª. Pú.','Proc. Es.','Ajustar','coator',),
+        'ignorar': ('Paciente','Beneficiário', 'Administrador', 'Síndico', 'Cônjuge', 'Alienante', 'Ass Def', 'Def. Públic','Defª. Públic', 'Defensor','Ass.M.P.', 'Depositário', 'Assistente', 'Juízo Deprecant', 'Informante', 'Complementares', 'MPAM', 'Ministério Público', 'Testemun', 'Advogad', 'Arrematante', 'Leiloeiro', 'Perito', 'Curad', 'Defensor públic', 'Def. Púb.', 'Perit', 'Herdeiro', 'Criança', 'Advogada','Procª. Justiça' ,'Proc. Justiça', 'Estagiári','Testamenteira', 'Cur. Esp.', 'Cur. Especial', 'Reconvinte', 'Reconvind','Custos legis','Adesivo','Defª. Pú.','Proc. Es.','Ajustar','coator','Assistente'),
         'ativo': ('Litisconsorte Ativo', 'Impugnante', 'LitsAtiv', 'Impetran', 'Notificante', 'LitisAtiv', 'Confrontante', 'Promotor', 'Consgte', 'Ativo', 'Denunciante', 'Solicitante', 'Arrolante', 'Promovente', 'exequente', 'Exeqüente', 'requeren', 'autor', 'reclaman', 'Exeqte', 'Reqte', 'Credor', 'Reclamte', 'Interpte', 'Declarante', 'Embargan', 'Agravante', 'Vítima','Usucpte','Opoente','Excipien','Embte.'),
         'passivo': ('Litisconsorte Passivo', 'Impugnad', 'LitsPassiv','Passiv', 'Impetrad', 'Confrontado', 'Consignado', 'Passivo', 'Denunciad', 'Solicitad', 'Arrolado', 'Promovido', 'Execdo', 'Execda', 'executad', 'requerid', 'ré', 'reclamad', 'Exectd', 'Reqd', 'Proprietário', 'Devedor', 'Reclamd', 'Interpda', 'Declarado', 'Embargad', 'Agravad', 'REU','Usucapia.','Denuncia.','Reconhec.','Oposto','Excepto'),
         'terceiro': ('Aut Pl','Inventariante','Sucessor','TercNaInt', 'Intrsdo', 'Terc.Int', 'Terceiro', 'Intssado', 'Interessad', 'TerInt', 'Interesd', 'Intssada', 'Terceiro Interessado', 'Cientificado Obrigatório', 'Representante', 'Repte', 'Represte.', 'Represen', 'RepreLeg','Preposto','Interess.','Herdeira','AssLitisc')

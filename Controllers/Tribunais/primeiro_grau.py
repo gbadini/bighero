@@ -9,6 +9,7 @@ class PrimeiroGrau(Varredura):
         self.arquiva_sentenca = True
         self.captura_movs_download = False
         self.titulo_partes = get_tipo_partes()
+        self.ignora_arq_pend = False
 
     # GERENCIA A CAPTURA DE DADOS, DOWNLOADS E SALVA NA BASE
     def varrer(self, db, login, senha, token=None):
@@ -20,8 +21,13 @@ class PrimeiroGrau(Varredura):
 
         self.chaves_agenda = agenda_base(db)
 
-        campo_plataforma = 'prc_' + nome_plataforma(self.plataforma)
-        campo_data = 'prc_data_' + nome_plataforma(self.plataforma)
+        if self.area == 3:
+            campo_plataforma = 'prc_trf'
+            campo_data = 'prc_data_trf'
+        else:
+            campo_plataforma = 'prc_' + nome_plataforma(self.plataforma)
+            campo_data = 'prc_data_' + nome_plataforma(self.plataforma)
+
         down_pen = self.tipo == 1
         count_error = 0
         self.active_conn = self.conn[db]
@@ -64,17 +70,20 @@ class PrimeiroGrau(Varredura):
             # print(procs)
             inicio = time.time()
             for proc in procs:
-                if Processo.ultimo_update(self.conn[db], proc['prc_id'], self.plataforma, proc[campo_data]):
-                    print('Processo já varrido')
+                if Processo.ultimo_update(self.conn[db], proc['prc_id'], self.plataforma, proc[campo_data], area=self.area):
+                    print('Processo já varrido - '+str(proc['prc_id']))
                     continue
 
-
-                if self.intervalo > 0:
-                    tempo_total = time.time() - inicio
-                    print('sleep ',self.intervalo-tempo_total)
-                    if tempo_total < self.intervalo:
-                        time.sleep(self.intervalo-tempo_total)
-                    inicio = time.time()
+                if self.varredura_vespertina:
+                    print('Varredura vespertina. Aguardando 45s...')
+                    time.sleep(45)
+                else:
+                    if self.intervalo > 0:
+                        tempo_total = time.time() - inicio
+                        print('sleep ',self.intervalo-tempo_total)
+                        if tempo_total < self.intervalo:
+                            time.sleep(self.intervalo-tempo_total)
+                        inicio = time.time()
 
                 self.prc_id = proc['prc_id']
                 self.proc_data = proc
@@ -95,17 +104,19 @@ class PrimeiroGrau(Varredura):
                         busca = self.busca_processo(numero_proc)
 
                         if not busca:
-                            if proc[campo_plataforma] and (self.grau==proc['prc_grau'] or proc['prc_grau'] is None):
+                            if (proc[campo_plataforma] is not None and proc[campo_plataforma] > 0) and (self.grau==proc['prc_grau'] or proc['prc_grau'] is None):
                                 if self.kill_nao_localizado:
                                     raise FatalException("Processo Localizado Anteriormente", self.uf, self.plataforma, self.prc_id)
                                 else:
                                     raise MildException("Processo Localizado Anteriormente", self.uf, self.plataforma, self.prc_id)
-                            Processo.update(self.conn[db], proc['prc_id'], self.plataforma, False, {})
+
+                            result_nl = self.trata_dados_nl(proc)
+                            Processo.update(self.conn[db], proc['prc_id'], self.plataforma, False, result_nl, area=self.area)
                             self.logger.info('Não Localizado', extra={'log_prc_id': self.prc_id})
                             continue
 
                     if self.confere_segredo(numero_proc):
-                        Processo.update(self.conn[db], proc['prc_id'], self.plataforma, True, {'prc_segredo': True, 'prc_status': 'Segredo de Justiça'})
+                        Processo.update(self.conn[db], proc['prc_id'], self.plataforma, True, {'prc_segredo': True, 'prc_status': 'Segredo de Justiça'}, area=self.area)
                         continue
 
                     pra_grau = None
@@ -116,24 +127,27 @@ class PrimeiroGrau(Varredura):
                     arquivos_base = ProcessoArquivo.select(self.conn[db], proc['prc_id'], self.plataforma, pra_grau=pra_grau)
                     pendentes = []
                     # VERIFICA QUAIS ARQUIVOS ESTÃO COM O DOWNLOAD PENDENTE
-                    legado = False
-                    for arb in arquivos_base:
-                        if arb['pra_erro']:
-                            if arb['pra_legado']:
-                                legado = True
-                            pendentes.append(arb)
+                    if proc['prc_situacao'] in ('Arquivo Morto','Morto','Encerrado'):
+                        legado = True
+                    else:
+                        legado = False
+                        for arb in arquivos_base:
+                            if arb['pra_erro']:
+                                if arb['pra_legado']:
+                                    legado = True
+                                pendentes.append(arb)
 
                     full = self.completo or proc[campo_data] is None
-                    if not full and self.tipo != 1 and (len(pendentes) == 0 or legado):
+                    if not full and self.tipo != 1 and (self.ignora_arq_pend or len(pendentes) == 0 or legado):
                         if self.ultima_movimentacao(proc['cadastro'], proc['prc_id'], self.conn[db]):
-                            Processo.update(self.conn[db], proc['prc_id'], self.plataforma, True, {})
-                            continue
+                            if not self.confere_arquivos_novos(arquivos_base):
+                                Processo.update(self.conn[db], proc['prc_id'], self.plataforma, True, {}, area=self.area)
+                                continue
 
                     if self.nao_varrer:
-                        if legado or len(pendentes) > 0 or self.confere_arquivos_novos(arquivos_base):
-                            ignorar_id.append(str(proc['prc_id']))
-                            print("Pulando Varredura")
-                            continue
+                        ignorar_id.append(str(proc['prc_id']))
+                        print("Pulando Varredura")
+                        continue
 
                     if self.tipo == 2 or self.tipo == 3 or (self.tipo == 1 and self.captura_movs_download):
                         acp_full = full
@@ -191,7 +205,7 @@ class PrimeiroGrau(Varredura):
                             print('adv ',adv)
                             print('prc ',prc)
                         print('arq ', arq)
-                    if Processo.ultimo_update(self.conn[db], proc['prc_id'], self.plataforma, proc[campo_data]):
+                    if Processo.ultimo_update(self.conn[db], proc['prc_id'], self.plataforma, proc[campo_data], area=self.area):
                         continue
 
                     if self.tipo != 1:
@@ -199,7 +213,7 @@ class PrimeiroGrau(Varredura):
                         Acompanhamento.insert(self.conn[db], proc['prc_id'], self.plataforma, 1, acp, chaves_agenda=self.chaves_agenda)
                         ProcessoResponsavel.insert(self.conn[db], proc['prc_id'], adv, self.plataforma, self.apagar_partes_inexistentes)
                         Parte.insert(self.conn[db], proc['prc_id'], prt, self.plataforma, self.apagar_partes_inexistentes)
-                        Processo.update(self.conn[db], proc['prc_id'], self.plataforma, True, prc)
+                        Processo.update(self.conn[db], proc['prc_id'], self.plataforma, True, prc, area=self.area)
 
                         # CONFERE SE PRECISA ATUALIZAR A CONTINGENCIA DO PROCESSO
                         if 'prc_valor_causa' in prc and prc['prc_valor_causa'].strip() != '':
@@ -245,7 +259,7 @@ class PrimeiroGrau(Varredura):
                         casos_com_erro[self.prc_id] = 1
 
                     self.logger.warning(tb, extra={'log_prc_id': self.prc_id})
-                    if tb.find('CNJ') > -1 or tb.find('Unhandled Exception'):
+                    if tb.find('CNJ') > -1 or tb.find('Unhandled Exception') > -1:
                         count_error += 1
                     else:
                         count_error = 0
@@ -370,3 +384,9 @@ class PrimeiroGrau(Varredura):
                     arq.append(p)
 
         return arq
+
+    def trata_dados_nl(self, dados):
+        if self.area == 3:
+            return {'prc_trf': dados['prc_trf'], }
+
+        return {}

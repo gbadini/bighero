@@ -26,6 +26,10 @@ class Varredura():
         self.init_vars()
         self.uf = self.__class__.__name__
         self.uf = self.uf.replace('2g','')
+        f = self.uf.find('_')
+        if f > -1:
+            self.uf = self.uf[f+1:]
+
         self.conn = {}
         self.reiniciar_navegador = True
         self.kill_nao_localizado = False
@@ -112,8 +116,8 @@ class Varredura():
 
         # try:
         if len(rows) > 0:
-            # Session = connect_db('log', '201.47.170.196,1535')
-            Session = connect_db('log', '186.195.37.158,1535')
+            Session = connect_db('log', '201.47.170.196,1535')
+            # Session = connect_db('log', '186.195.37.158,1535')
             Log.insert(Session(), rows)
             Log.clear(sqlite_conn)
 
@@ -147,7 +151,7 @@ class Varredura():
         return ids
 
     # INICIA O CICLO DA VARREDURRA: INICIA O NAVEGADOR, CAPTURA ERROS E ITERA ATÉ QUE OS PROCESSOS SEJAM ESGOTADOS
-    def ciclo(self, dia, tipo=2, query_and='', base='Todas', categoria=1, headless=False, arquivo_morto=False, intervalo=[], grau=1, usuario='', area=1):
+    def ciclo(self, dia, tipo=2, query_and='', base='Todas', categoria=1, headless=False, arquivo_morto=False, intervalo=[], grau=1, usuario='', area=1, vespertino=False):
         '''
         :param datetime dia: dia de referrncia para a varredura
         :param str tipo: tipo de varredura: 1 para apenas Downloads, 2 para apenas coleta de dados, e 3 para ambos.
@@ -160,6 +164,7 @@ class Varredura():
         self.arquivo_morto = arquivo_morto
         self.range = intervalo
         self.area = area
+        self.varredura_vespertina = vespertino
         self.nome_plataforma = nome_plataforma(self.plataforma, self.uf)
         if categoria == 2:
             self.completo = True
@@ -251,7 +256,7 @@ class Varredura():
         return True
 
     # MÉTODO PARA A BUSCA DO PROCESSO NO TRIBUNAL
-    def busca_processo(self, numero_busca):
+    def busca_processo(self, numero_busca, pasta=None):
         '''
         :param str numero_busca: processo a ser localizado
         '''
@@ -343,4 +348,4 @@ class Varredura():
 
     # MÉTODO PARA A BUSCA DO PROCESSO NO TRIBUNAL
     def confere_arquivos_novos(self, arquivos_base):
-        return True
+        return False
