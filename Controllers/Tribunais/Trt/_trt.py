@@ -39,8 +39,6 @@ class Trt(PrimeiroGrau):
 
     # REALIZA LOGIN NA PLATAFORMA
     def login(self, usuario=None, senha=None):
-        self.driver.get(self.pagina_inicial)
-
         if usuario == None:
             # self.muda_para_certificado('Shodô')
             if not self.faz_login_com_certificado():
